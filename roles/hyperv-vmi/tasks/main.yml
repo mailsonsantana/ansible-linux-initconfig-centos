@@ -1,0 +1,18 @@
+  - name: Instalando hyperv-daemons 
+    yum:
+     name: "{{ item }}"
+     state: latest
+    with_items:
+     - hyperv-daemons 
+
+  - name: Iniciando o agente do hypervkvpd
+    service:
+     name: hypervkvpd
+     state: started
+     enabled: yes
+
+  - name: Iniciando o agente do hypervvssd
+    service:
+     name: hypervvssd
+     state: started
+     enabled: yes

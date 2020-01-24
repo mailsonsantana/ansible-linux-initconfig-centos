@@ -1,0 +1,11 @@
+---
+  - hosts: '{{ target }}'
+    roles:
+      - { role: 'pacotes-basicos', tags: 'pacotes-basicos' }
+      - { role: 'atualizacoes', tags: 'atualizacoes' }
+      - { role: 'ntp', tags: 'ntp' }
+      - { role: 'autenticacao', tags: 'autenticacao' }
+      - { role: 'sccm', tags: 'sccm' }
+      - { role: 'motd', tags: 'motd' }
+      - { role: 'monitoramento', tags: 'monitoramento' }
+#      - { role: 'hyperv-vmi', tags: 'hyperv-vmi' }

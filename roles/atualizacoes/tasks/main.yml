@@ -1,0 +1,11 @@
+  - name: Atualizando pacotes do sistema
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Criando arquivo de script para verificação de atualizações do sistema
+    copy:
+      dest: "/etc/cron.weekly/yumcheckupdate"
+      content: "{{ sender }}"
+      mode: 0700
+      owner: root

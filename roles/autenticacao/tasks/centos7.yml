@@ -1,0 +1,63 @@
+    - debug:
+        msg: Integrando CentOS 7 com Active Directory
+
+    - name: Instala os pacotes necessarios
+      yum:
+        name: realmd,sssd,oddjob,oddjob-mkhomedir,adcli,samba-common,samba-common-tools,ntpdate,ntp,python-pip
+        state: present
+    
+    - name: Instando o pexpect usando o pip
+      pip:
+        name: pexpect
+    
+    - name: Adiciona o servidor ao AD e cria o objeto do computador na OU
+      expect:
+        command: /bin/bash -c "/usr/sbin/realm join --user=administrator@mdh.gov.br mdh.gov.br"
+        responses:
+          Password for *: "{{ bind_password }}"
+          Senha para *: "{{ bind_password }}"
+          
+    - name: Permite o grupo de Admins fazer logon no sistema
+      command: /bin/bash -c "/usr/sbin/realm permit -g GU_LINUX_ADMINS@mdh.gov.br"
+
+    - name: Criando Arquivo de sudo para grupo de Admins
+      copy:
+        dest: "/etc/sudoers.d/mdh"
+        content: "%GU_LINUX_ADMINS@mdh.gov.br       ALL=(ALL)       NOPASSWD: ALL"
+        mode: 0644
+        owner: root
+    
+    - name: Adiciona o grupo Admins para acesso via SSH
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        line: 'AllowGroups root gu_linux_admins'
+        insertafter: EOF
+
+    - name: Altera linha de FQDN
+      lineinfile: 
+        dest: /etc/sssd/sssd.conf
+        regexp: 'use_fully_qualified_names = True'
+        line: 'use_fully_qualified_names = False'
+        backrefs: yes
+
+    - name: Altera linha de HomeDir
+      lineinfile:
+        dest: /etc/sssd/sssd.conf
+        regexp: 'fallback_homedir = /home/%u@%d'
+        line: 'fallback_homedir = /home/%u'
+        backrefs: yes
+
+    - name: Reinicia realmd
+      service:
+        name: realmd
+        state: restarted
+
+    - name: Reinicia sssd
+      service:
+        name: sssd
+        state: restarted
+
+    - name: Reinicia SSH
+      service:
+        name: sshd
+        state: restarted

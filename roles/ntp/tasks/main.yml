@@ -1,0 +1,44 @@
+    - name: Remove linhas com configurações antigas
+      lineinfile:
+        path: /etc/ntp.conf
+        regexp: '^server'
+        state: absent
+
+    - name: Adiciona configuração do servidor ntp
+      lineinfile:
+        dest: /etc/ntp.conf
+        line: '{{ ntpserver }}'
+        insertafter: "^# Please"
+
+    - name: Liberando porta do NTPD no firewall
+      iptables:
+       chain: OUTPUT
+       protocol: udp
+       destination_port: 123
+       jump: ACCEPT
+       rule_num: 5
+#       ignore_errors: yes
+      when: ansible_distribution_major_version == "6"
+
+    - name: Liberando porta do NTPD no firewall
+      firewalld:
+       service: ntp
+       permanent: yes
+       immediate: yes
+       state: enabled
+#       ignore_errors: yes
+      when: ansible_distribution_major_version == "7"
+
+    - name: Reinicia o serviço NTPD no centos 6
+      service:
+        name: ntpd
+        state: reloaded
+        enabled: yes
+      when: ansible_distribution_major_version == "6"
+
+    - name: Reinicia o serviço NTPD no centos 7
+      systemd:
+        name: ntpd
+        state: reloaded
+        enabled: yes
+      when: ansible_distribution_major_version == "7"

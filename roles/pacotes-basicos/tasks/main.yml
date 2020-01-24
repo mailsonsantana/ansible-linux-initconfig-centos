@@ -1,0 +1,20 @@
+  - name: Instalando pacotes básicos
+    yum:
+     name: "{{ item }}"
+     state: latest
+    with_items:
+     - wget
+     - net-tools
+     - yum-utils
+     - curl
+     - sudo
+     - vim
+     - ntpdate
+     - epel-release
+     - ntp
+     - nfs-utils
+     - cifs-utils
+     - tcpdump
+     - vmstat
+     - iostat
+     - htop

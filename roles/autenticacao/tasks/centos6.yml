@@ -1,0 +1,80 @@
+    - debug:
+        msg: Integrando CentOS 6 com Active Directory
+ 
+    - name: Instala os pacotes necessarios
+      yum:
+        name: adcli,samba-common,oddjob-mkhomedir,oddjob,samba-winbind-clients,samba-winbind,sssd,pam_krb5,authconfig,libselinux-python,python-pip
+        state: present
+
+    - name: Instando o pexpect usando o pip
+      pip:
+        name: pexpect
+
+    - name: Adiciona o servidor ao AD e cria o objeto do computador na OU
+      expect:
+        command: /bin/bash -c "/usr/sbin/adcli join mdh.gov.br -U administrator"
+        responses:
+          Password for *: "{{ bind_password }}"
+          Senha para *: "{{ bind_password }}"
+
+    - name: Ativa autenticação sssd
+      command: /usr/sbin/authconfig --enablesssd --enablesssdauth --update
+
+    - name: Copiando arquivo de configuração do Kerberos
+      copy:
+       src: files/krb5.conf
+       dest: /etc/krb5.conf
+       owner: root
+       group: root
+       mode: 0644
+    
+    - name: Copiando arquivo de configuração do SSSD
+      copy:
+       src: files/sssd.conf
+       dest: /etc/sssd/sssd.conf
+       owner: root
+       group: root
+       mode: 0600
+    
+    - name: Configura o arquivo system-auth
+      lineinfile:
+        dest: /etc/pam.d/system-auth
+        line: 'session     optional      pam_mkhomedir.so skel=/etc/skel umask=077'
+        insertafter: EOF
+
+    - name: Configura o arquivo sshd
+      lineinfile:
+        dest: /etc/pam.d/sshd
+        line: 'session    required     pam_mkhomedir.so skel=/etc/skel/ umask=0022'
+        insertafter: EOF
+
+    - name: Criando Arquivo de sudo para grupo de Admins
+      copy:
+        dest: "/etc/sudoers.d/mdh"
+        content: "%GU_LINUX_ADMINS@mdh.gov.br       ALL=(ALL)       NOPASSWD: ALL"
+        mode: 0644
+        owner: root
+
+    - name: Adiciona o grupo Admins para acesso via SSH
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        line: 'AllowGroups root gu_linux_admins'
+        insertafter: EOF
+
+    - name: Inicia sssd
+      service:
+        name: sssd
+        state: started
+        enabled: yes
+    
+    - name: Inicia Winbind
+      service:
+        name: winbind
+        state: started
+        enabled: yes
+
+    - name: Reinicia SSH
+      service:
+        name: sshd
+        state: restarted
+

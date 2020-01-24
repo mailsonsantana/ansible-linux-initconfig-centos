@@ -1,0 +1,10 @@
+  - import_tasks: ./centos7.yml
+    when: ansible_distribution_major_version == "7"
+    args:
+     warn: false
+
+  - import_tasks: ./centos6.yml
+    when: ansible_distribution_major_version == "6"
+    args:
+     warn: false
+ 

@@ -1,0 +1,14 @@
+  - name: restart ntp
+    service:
+      name: ntpd
+      state: restarted
+      enabled: yes
+    when: ansible_distribution_major_version == "6"
+
+  - name: Reinicia o serviço NTPD no centos 7
+    systemd:
+      name: ntpd
+      state: restarted
+      enabled: yes
+    when: ansible_distribution_major_version == "7"
+

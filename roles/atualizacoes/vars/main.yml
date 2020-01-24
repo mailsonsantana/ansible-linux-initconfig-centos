@@ -1,0 +1,6 @@
+---
+# vars file for configura-linux
+sender: |
+  zabbix_sender -z 10.102.11.124 -s "$(hostname)" -k "yum.securityupdate" -o "$(yum list updates --security | awk '{print $1;}' | grep `uname -p` | wc -l)" &>> /var/log/cron
+  zabbix_sender -z 10.102.11.124 -s "$(hostname)" -k "yum.update" -o "$(yum list updates | awk '{print $1;}' | grep `uname -p` | wc -l)" &>> /var/log/cron
+
